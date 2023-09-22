@@ -6,6 +6,8 @@
 #include "protdef.h"
 #include "apiwrap.h"
 
+#include "sockfdarr.h"
+
 
 struct fdgroup {
     /* Used to select active fd 

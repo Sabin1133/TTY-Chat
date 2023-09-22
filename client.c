@@ -32,26 +32,27 @@ void *handle_input(void *arg)
     struct chatpkg data;
 
     data.type = _CHAT_INFO_MESSAGE;
-    strncpy(data.name, args->username, _BUFF_NAMESIZE - 1);
-    strcpy(data.content, "/connect");
+    strcpy(data.username, args->username);
+    strcpy(data.content, "/enter");
     send(sfd, &data, sizeof(data), 0);
 
     data.type = _CHAT_MESSAGE;
-
     while (1) {
         itty_gets(buff, _BUFF_TEXTSIZE);
         strcpy(data.content, buff);
 
-        if (strcmp(buff, "/leave"))
+        if (strcmp(buff, "/leave") == 0)
             break;
 
         send(sfd, &data, sizeof(data), 0);
 
-        printf("\e[A\r");
+        printf("\e[A\e[2K\e[8C");
     }
 
     data.type = _CHAT_INFO_MESSAGE;
     send(sfd, &data, sizeof(data), 0);
+
+    printf("\e[A\e[2K");
 
     (*pflg) |= CLIENT_LEAVE;
 
@@ -62,8 +63,13 @@ void *handle_output(void *arg)
 {
     struct thd_client_args *args = arg;
     int *pflg = args->flags_pointer, sfd = args->socket_fd;
-    char *buff = args->buffer;
+    char *buff = args->buffer, special_buff[256];
     struct chatpkg data;
+
+    recv(sfd, special_buff, sizeof(_WELCOME_MESS), 0);
+    printf("%s", special_buff);
+
+    printf("\e[8C");
 
     while (1) {
         if ((*pflg) & CLIENT_LEAVE)
@@ -73,19 +79,24 @@ void *handle_output(void *arg)
 
         printf("\e[s\e[2K\e[A\e[2K\r");
 
-        if (data.type = _CHAT_MESSAGE) {
-            printf("║%s: %s\n", data.name, data.content);
+        if (data.type == _CHAT_MESSAGE) {
+            printf("║ %s: %s\n", data.username, data.content);
         } else {
-            if (data.content[1] == 'c')
-                printf("\t\033[3m%s connected...\033[0m\n", data.name);
+            if (data.content[1] == 'e')
+                printf("║ \t\033[3m%s connected...\033[0m\n", data.username);
             else
-                printf("\t\033[3m%s disconnected...\033[0m\n", data.name);
+                printf("║ \t\033[3m%s disconnected...\033[0m\n", data.username);
         }
 
-        printf("╠═════════════════════════════════════════\n║");
-        printf("%s\e[u\e[B", buff);
+        printf(_BAR);
+        printf("║ type: %s\e[u\e[B", buff);
         fflush(stdout);
     }
+
+    printf("\e[2K\e[A");
+
+    recv(sfd, special_buff, sizeof(_LEAVE_MESS), 0);
+    printf("%s", special_buff);
 
     return NULL;
 }
@@ -94,19 +105,24 @@ int main(int argc, char *argv[])
 {
     int sfd, flags = 0;
     char tty_buffer[_BUFF_TEXTSIZE] = {0};
-    pthread_t cli, chat;
-    in_port_t selected_port;
+    pthread_t incli, outcli;
+    in_port_t serv_port;
     struct sockaddr_in myaddr;
     struct thd_client_args args;
 
     if (parse_cli_arg(argc, argv))
         return 0;
 
-    sscanf(argv[3], "%hu", &selected_port);
+    if (strlen(argv[1]) >= _BUFF_USERNAMESIZE) {
+        fprintf(stderr, "Incorrect username (31 char max)...\n");
+        return 0;
+    }
+
+    sscanf(argv[3], "%hu", &serv_port);
 
     myaddr.sin_family = AF_INET;
     myaddr.sin_addr.s_addr = inet_addr(argv[2]);
-    myaddr.sin_port = htons(selected_port);
+    myaddr.sin_port = htons(serv_port);
 
     if ((sfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
         fprintf(stderr, "Failed to open file descriptor...\n");
@@ -114,7 +130,7 @@ int main(int argc, char *argv[])
     }
 
     if (connect(sfd, (struct sockaddr *)&myaddr, sizeof(myaddr)) == -1) {
-        fprintf(stderr, "Failed to connect to %s:%hu...\n", argv[2], selected_port);
+        fprintf(stderr, "Failed to connect to %s:%hu...\n", argv[2], serv_port);
         close(sfd);
         return 0;
     }
@@ -124,11 +140,11 @@ int main(int argc, char *argv[])
     args.username = argv[1];
     args.buffer = tty_buffer;
 
-    pthread_create(&cli, NULL, handle_input, &args);
-    pthread_create(&chat, NULL, handle_output, &args);
+    pthread_create(&incli, NULL, handle_input, &args);
+    pthread_create(&outcli, NULL, handle_output, &args);
 
-    pthread_join(cli, NULL);
-    pthread_join(chat, NULL);
+    pthread_join(incli, NULL);
+    pthread_join(outcli, NULL);
 
     close(sfd);
 

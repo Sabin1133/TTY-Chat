@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <termios.h>
+
 #include "serverside.h"
 
 #define CHAT_CLOSE 2
@@ -25,20 +27,29 @@ int parse_cli_arg(int argc, char *argv[])
     return 0;
 }
 
-void *handle_server(void *arg)
+void *handle_input(void *arg)
 {
     int *pflg = arg;
     char buff[16] = {0};
+    struct termios term;
+
+    tcgetattr(STDIN_FILENO, &term);
+
+    term.c_lflag &= (~ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &term);
 
     while (strcmp(buff, "closetower\n"))
         fgets(buff, sizeof(buff), stdin);
 
     (*pflg) |= CHAT_CLOSE;
 
+    term.c_lflag |= ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
     return NULL;
 }
 
-void *handle_work(void *arg)
+void *handle_chat(void *arg)
 {
     struct thd_serv_args *args = arg;
     int *pflg = args->flag_pointer;
@@ -65,7 +76,7 @@ int main(int argc, char *argv[])
 {
     int flags = 0;
     in_port_t selected_port;
-    pthread_t cli, chat;
+    pthread_t cli, work;
     struct fdgroup fdgr;
     struct thd_serv_args args;
     FILE *act_log, *mess_log;
@@ -98,13 +109,13 @@ int main(int argc, char *argv[])
     args.flag_pointer = &flags;
     args.fdg = &fdgr;
     args.activity_log = act_log;
-    args.messages_log = act_log;
+    args.messages_log = mess_log;
 
-    pthread_create(&cli, NULL, handle_server, &flags);
-    pthread_create(&chat, NULL, handle_work, &args);
+    pthread_create(&cli, NULL, handle_input, &flags);
+    pthread_create(&work, NULL, handle_chat, &args);
 
     pthread_join(cli, NULL);
-    pthread_join(chat, NULL);
+    pthread_join(work, NULL);
 
     fdgroup_cleanup(&fdgr, act_log);
     fclose(mess_log);

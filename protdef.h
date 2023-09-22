@@ -11,7 +11,7 @@
 
 struct chatpkg {
     int type;
-    char name[_BUFF_NAMESIZE];
+    char username[_BUFF_USERNAMESIZE];
     char content[_BUFF_TEXTSIZE];
 };
 

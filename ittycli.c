@@ -92,11 +92,6 @@ int itty_gets(char *buff, int size)
                     printf("\e[%dD", qnt - pos);
             }
         }
-
-        if (qnt == 0)
-            printf("Type here...\r");
-        else if (pos == size)
-            printf("  (Limit exceeded...)\e[21D");
     }
 
     printf("\n");

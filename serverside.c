@@ -12,44 +12,58 @@
 #define _SFDARR_ADD 1
 #define _SFDARR_SENDALL 2
 
-void _sfdarr_add(int *sfdarr, int *sfdnr, int fd)
+// void _sfdarr_add(int *sfdarr, int *sfdnr, int fd)
+// {
+//     int nr = *sfdnr;
+
+//     if (nr < 0 || _SOCKETS_LIMIT <= nr)
+//         return;
+
+//     sfdarr[nr] = fd;
+
+//     *sfdnr = ++nr;
+// }
+
+// void _sfdarr_rmv(int *sfdarr, int *sfdnr, int fd)
+// {
+//     int i, nr = *sfdnr;
+
+//     if (nr < 0 || _SOCKETS_LIMIT <= nr)
+//         return;
+
+//     for (i = 0; i < nr; ++i)
+//         if (sfdarr[i] == fd) {
+//             *sfdnr = --nr;
+
+//             for (; i < nr; ++i)
+//                 sfdarr[i] = sfdarr[i + 1];
+
+//             sfdarr[nr] = -1;
+
+//             break;
+//         }
+// }
+
+// void _sfdarr_send(int *sfdarr, int sfdnr, struct chatpkg *data)
+// {
+//     int i;
+
+//     for (i = 0; i < sfdnr; ++i)
+//         send(sfdarr[i], data, sizeof(*data), 0);
+// }
+
+void _fdgroup_addfd(struct fdgroup *fdg, int _fd)
 {
-    int nr = *sfdnr;
+    struct epoll_event ev = {.events = EPOLLIN, .data.fd = _fd};
 
-    if (nr < 0 || _SOCKETS_LIMIT <= nr)
-        return;
-
-    sfdarr[nr] = fd;
-
-    *sfdnr = ++nr;
+    epoll_ctl(fdg->epoll_fd, EPOLL_CTL_ADD, _fd, &ev);
+    sfdarr_ctl(fdg->socket_fd_array, SFDARR_ADD, _fd);
 }
 
-void _sfdarr_rmv(int *sfdarr, int *sfdnr, int fd)
+void _fdgroup_rmvfd(struct fdgroup *fdg, int _fd)
 {
-    int i, nr = *sfdnr;
-
-    if (nr < 0 || _SOCKETS_LIMIT <= nr)
-        return;
-
-    for (i = 0; i < nr; ++i)
-        if (sfdarr[i] == fd) {
-            *sfdnr = --nr;
-
-            for (; i < nr; ++i)
-                sfdarr[i] = sfdarr[i + 1];
-
-            sfdarr[nr] = -1;
-
-            break;
-        }
-}
-
-void _sfdarr_send(int *sfdarr, int sfdnr, struct chatpkg *data)
-{
-    int i;
-
-    for (i = 0; i < sfdnr; ++i)
-        send(sfdarr[i], data, sizeof(*data), 0);
+    sfdarr_ctl(fdg->socket_fd_array, SFDARR_RMV, _fd);
+    epoll_ctl(fdg->epoll_fd, EPOLL_CTL_ADD, _fd, NULL);
 }
 
 /*--------PUBLIC--------*/
@@ -86,7 +100,8 @@ int fdgroup_setup(struct fdgroup *fdg, in_port_t port, FILE *log)
 
     fdg->epoll_fd = epfd;
     fdg->listening_socket_fd = lsfd;
-    memset(fdg->socket_fd_array, -1, sizeof(fdg->socket_fd_array));
+    // memset(fdg->socket_fd_array, -1, sizeof(fdg->socket_fd_array));
+    sfdarr_ctl(fdg->socket_fd_array, SFDARR_SETUP, _SOCKETS_LIMIT);
 
     return 0;
 }
@@ -101,8 +116,6 @@ int fdgroup_work(struct fdgroup *fdg, int timeout, FILE *log, FILE *msglog)
     struct epoll_event ev_arr[_SOCKETS_LIMIT], ev;
     struct chatpkg data;
 
-    // printf("astept\n");
-
     if ((ev_nr = epoll_wait(epfd, ev_arr, _SOCKETS_LIMIT, timeout)) == -1) {
         fprintf(stderr, "Epoll failed...");
         return -1;
@@ -113,33 +126,31 @@ int fdgroup_work(struct fdgroup *fdg, int timeout, FILE *log, FILE *msglog)
 
         if (fd == lsfd) {
             new_fd = wrp_accept(lsfd, NULL, log);
-            ev.events = EPOLLIN, ev.data.fd = fd;
-            epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
-            _sfdarr_add(sfdarr, &sfd_nr, fd);
+            _fdgroup_addfd(fdg, new_fd);
 
-            // recv(new_fd, &data, sizeof(data), 0);
+            recv(new_fd, &data, sizeof(data), 0);
 
-            // _sfdarr_send(sfdarr, sfd_nr, &data);
+            send(new_fd, _WELCOME_MESS, sizeof(_WELCOME_MESS), 0);
+            sfdarr_ctl(sfdarr, SFDARR_SENDALL, (void *)&data, sizeof(data));
 
-            printf("%s connected...\n", data.name);
-            fprintf(log, "%s connected...\n", data.name);
+            printf("%s connected...\n", data.username);
+            fprintf(log, "%s connected...\n", data.username);
         } else {
             recv(fd, &data, sizeof(data), 0);
-            _sfdarr_send(sfdarr, sfd_nr, &data);
+            sfdarr_ctl(sfdarr, SFDARR_SENDALL, (void *)&data, sizeof(data));
 
             if (strcmp(data.content, "/leave")) {
-                printf("[]%s: %s", data.name, data.content);
-                fprintf(msglog, "[]%s: %s", data.name, data.content);
+                printf("[]%s: %s\n", data.username, data.content);
+                fprintf(msglog, "[]%s: %s\n", data.username, data.content);
             } else {
-                // send(new_fd, _LEAVE_MESS, sizeof(_LEAVE_MESS), 0);
+                send(fd, _LEAVE_MESS, sizeof(_LEAVE_MESS), 0);
 
-                _sfdarr_rmv(sfdarr, &sfd_nr, fd);
-                epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+                _fdgroup_rmvfd(fdg, fd);
                 shutdown(fd, SHUT_RDWR);
                 close(fd);
 
-                printf("%s disconnected...\n", data.name);
-                fprintf(log, "%s disconnected...\n", data.name);
+                printf("%s disconnected...\n", data.username);
+                fprintf(log, "%s disconnected...\n", data.username);
             }
         }
     }
@@ -162,9 +173,9 @@ void fdgroup_cleanup(struct fdgroup *fdg, FILE *log)
         close(sfd_arr[i]);
     }
 
-    memset(fdg->socket_fd_array, 0, sizeof(fdg->socket_fd_array));
+    sfdarr_ctl(sfd_arr, SFDARR_CLEANUP);
 
-    epoll_ctl(lsfd, EPOLL_CTL_DEL, lsfd, NULL);
+    epoll_ctl(epfd, EPOLL_CTL_DEL, lsfd, NULL);
     shutdown(lsfd, SHUT_RDWR);
     close(lsfd);
 
