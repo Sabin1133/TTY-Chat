@@ -12,46 +12,6 @@
 #define _SFDARR_ADD 1
 #define _SFDARR_SENDALL 2
 
-// void _sfdarr_add(int *sfdarr, int *sfdnr, int fd)
-// {
-//     int nr = *sfdnr;
-
-//     if (nr < 0 || _SOCKETS_LIMIT <= nr)
-//         return;
-
-//     sfdarr[nr] = fd;
-
-//     *sfdnr = ++nr;
-// }
-
-// void _sfdarr_rmv(int *sfdarr, int *sfdnr, int fd)
-// {
-//     int i, nr = *sfdnr;
-
-//     if (nr < 0 || _SOCKETS_LIMIT <= nr)
-//         return;
-
-//     for (i = 0; i < nr; ++i)
-//         if (sfdarr[i] == fd) {
-//             *sfdnr = --nr;
-
-//             for (; i < nr; ++i)
-//                 sfdarr[i] = sfdarr[i + 1];
-
-//             sfdarr[nr] = -1;
-
-//             break;
-//         }
-// }
-
-// void _sfdarr_send(int *sfdarr, int sfdnr, struct chatpkg *data)
-// {
-//     int i;
-
-//     for (i = 0; i < sfdnr; ++i)
-//         send(sfdarr[i], data, sizeof(*data), 0);
-// }
-
 void _fdgroup_addfd(struct fdgroup *fdg, int _fd)
 {
     struct epoll_event ev = {.events = EPOLLIN, .data.fd = _fd};
@@ -63,7 +23,7 @@ void _fdgroup_addfd(struct fdgroup *fdg, int _fd)
 void _fdgroup_rmvfd(struct fdgroup *fdg, int _fd)
 {
     sfdarr_ctl(fdg->socket_fd_array, SFDARR_RMV, _fd);
-    epoll_ctl(fdg->epoll_fd, EPOLL_CTL_ADD, _fd, NULL);
+    epoll_ctl(fdg->epoll_fd, EPOLL_CTL_DEL, _fd, NULL);
 }
 
 /*--------PUBLIC--------*/
