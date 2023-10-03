@@ -1,9 +1,9 @@
 #ifndef SERVERSIDE_H
 #define SERVERSIDE_H
 
-#include "depen.h"
-#include "macrodef.h"
-#include "protdef.h"
+#include "../depen.h"
+#include "../macrodef.h"
+#include "../protdef.h"
 #include "apiwrap.h"
 
 #include "sockfdarr.h"

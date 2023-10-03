@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <stdarg.h>
-#include "inetw.h"
+#include "../inetw.h"
 
 #include "sockfdarr.h"
 
