@@ -11,14 +11,12 @@
 
 
 ## **General Overview**
----
 
-A server-client chat architecture written entirely in C usign only POSIX
+A server-client chat architecture written entirely in C using only POSIX
 libraries and with minimal need of dynamic memory. The chat was designed to be 
 easy to use, maintain and very portable hence the use of a TUI.
 
 ## **Important remarks and notes beforehand:**
----
 
 In order for people outside of local network to connect to the server a port 
 forward must be set up on the default gateway of the LAN with the port that the
@@ -26,7 +24,6 @@ server will be running on.
 
 
 ## **Functionality**
----
 
 ## Server-side
 
@@ -66,14 +63,12 @@ that is used to leave the chat and close the connection.
 For more information or help use the "--help" flag.
 
 ## **Other remarks and programming details**
----
 
 * The implementation is linux kernel style and the code format is done 
 accordingly hence every variable is declared at the start of every function
 * Minimal use of dynamic memory
 
 ## **Future Updates**
----
 
 * Download and upload files to the server (via FTP protocol)
 * more commands for the client
