@@ -1,31 +1,41 @@
-##### Copyright 2023 Padurariu Sabin
+##### Copyright 2022 Padurariu Sabin
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-━━━━━━━━━━━━━━━━━━━━━━━┏━━━┓┏━━━┓┏━━━┓┏━━━┓━━━┏━┓┏━┓┏━━━┓━━━━━━━━━━━━━━━━━━━━━━━
-━━━━━━━━━━━━━━━━━━━━━━━┃┏━┓┃┃┏━━┛┃┏━┓┃┗┓┏┓┃━━━┃┃┗┛┃┃┃┏━━┛━━━━━━━━━━━━━━━━━━━━━━━
-━━━━━━━━━━━━━━━━━━━━━━━┃┗━┛┃┃┗━━┓┃┃━┃┃━┃┃┃┃━━━┃┏┓┏┓┃┃┗━━┓━━━━━━━━━━━━━━━━━━━━━━━
-━━━━━━━━━━━━━━━━━━━━━━━┃┏┓┏┛┃┏━━┛┃┗━┛┃━┃┃┃┃━━━┃┃┃┃┃┃┃┏━━┛━━━━━━━━━━━━━━━━━━━━━━━
-━━━━━━━━━━━━━━━━━━━━━━━┃┃┃┗┓┃┗━━┓┃┏━┓┃┏┛┗┛┃━━━┃┃┃┃┃┃┃┗━━┓━━━━━━━━━━━━━━━━━━━━━━━
-━━━━━━━━━━━━━━━━━━━━━━━┗┛┗━┛┗━━━┛┗┛━┗┛┗━━━┛━━━┗┛┗┛┗┛┗━━━┛━━━━━━━━━━━━━━━━━━━━━━━
+━━━┏━━━┓┏━━━┓┏━━━┓━━━━┏┓━━┏┓┏━━━┓┏┓━┏┓━━━━┏━━━┓┏━━━┓┏━━━┓┏━━━┓┏━━┓┏━┓━┏┓┏━━━┓━━━
+━━━┃┏━┓┃┃┏━┓┃┃┏━━┛━━━━┃┗┓┏┛┃┃┏━┓┃┃┃━┃┃━━━━┃┏━┓┃┃┏━━┛┃┏━┓┃┗┓┏┓┃┗┫┣┛┃┃┗┓┃┃┃┏━┓┃━━━
+━━━┃┃━┃┃┃┗━┛┃┃┗━━┓━━━━┗┓┗┛┏┛┃┃━┃┃┃┃━┃┃━━━━┃┗━┛┃┃┗━━┓┃┃━┃┃━┃┃┃┃━┃┃━┃┏┓┗┛┃┃┃━┗┛━━━
+━━━┃┗━┛┃┃┏┓┏┛┃┏━━┛━━━━━┗┓┏┛━┃┃━┃┃┃┃━┃┃━━━━┃┏┓┏┛┃┏━━┛┃┗━┛┃━┃┃┃┃━┃┃━┃┃┗┓┃┃┃┃┏━┓━━━
+━━━┃┏━┓┃┃┃┃┗┓┃┗━━┓━━━━━━┃┃━━┃┗━┛┃┃┗━┛┃━━━━┃┃┃┗┓┃┗━━┓┃┏━┓┃┏┛┗┛┃┏┫┣┓┃┃━┃┃┃┃┗┻━┃━━━
+━━━┗┛━┗┛┗┛┗━┛┗━━━┛━━━━━━┗┛━━┗━━━┛┗━━━┛━━━━┗┛┗━┛┗━━━┛┗┛━┗┛┗━━━┛┗━━┛┗┛━┗━┛┗━━━┛━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┏━┓┏━┓┏━━━┓━━━━┏━━━┓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┃┃┗┛┃┃┃┏━━┛━━━━┃┏━┓┃━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┃┏┓┏┓┃┃┗━━┓━━━━┗┛┏┛┃━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┃┃┃┃┃┃┃┏━━┛━━━━━━┃┏┛━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┃┃┃┃┃┃┃┗━━┓━━━━━━┏┓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┗┛┗┛┗┛┗━━━┛━━━━━━┗┛━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+# TTY Chat
 
-## **General Overview**
+## General Overview
 
 A server-client chat architecture written entirely in C using only POSIX
 libraries and with minimal need of dynamic memory. The chat was designed to be 
 easy to use, maintain and very portable hence the use of a TUI.
 
-## **Important remarks and notes beforehand:**
+## Functionality
+
+## Important remarks and notes beforehand:
 
 In order for people outside of local network to connect to the server a port 
 forward must be set up on the default gateway of the LAN with the port that the
 server will be running on.
 
 
-## **Functionality**
+## Functionality
 
-## Server-side
+### Server-side
 
 The server will create two log files in the directory it resides, one with
 general information about the server's activity and one with all the messages 
@@ -44,7 +54,7 @@ servers and all the other connections.
 
 For more information or help use the "--help" flag.
 
-## CLient-side
+### CLient-side
 
 The client has a box for printing incoming messages and a input box both
 implemented in the terminal.
@@ -66,7 +76,7 @@ For more information or help use the "--help" flag.
 
 * The implementation is linux kernel style and the code format is done 
 accordingly hence every variable is declared at the start of every function
-* Minimal use of dynamic memory
+* Minimal use of dynamic memory allocation
 
 ## **Future Updates**
 

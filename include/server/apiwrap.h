@@ -1,5 +1,5 @@
 #ifndef APIWRAP_H
-#define APIKWRAP_H
+#define APIWRAP_H
 
 #include "../depen.h"
 
