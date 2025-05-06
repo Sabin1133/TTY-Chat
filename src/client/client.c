@@ -1,19 +1,28 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
-#include "clientside.h"
+#include "inetw.h"
+
+#include "chat_protocol.h"
+
+#include "client/tui.h"
 
 #define CLIENT_LEAVE 2
 
-struct thd_client_args {
+#define WELCOME_MESSAGE "╔══════════════════════════════════\n║\tWelcome to the chat!\n╠══════════════════════════════════\n\n"
+#define LEAVE_MESSAGE "╠══════════════════════════════════\n║\t\tBye!\n╚══════════════════════════════════\n"
+#define BAR "╠══════════════════════════════════\n"
+
+
+struct args {
     int *flags_pointer;
     int socket_fd;
     char *username;
     char *buffer;
 };
 
-int parse_cli_arg(int argc, char *argv[])
+int parse_args(int argc, char *argv[])
 {
     if ((argc != 4) || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
         printf("Usage:\n");
@@ -26,19 +35,19 @@ int parse_cli_arg(int argc, char *argv[])
 
 void *handle_input(void *arg)
 {
-    struct thd_client_args *args = arg;
+    struct args *args = arg;
     int *pflg = args->flags_pointer, sfd = args->socket_fd;
     char *buff = args->buffer;
-    struct chatpkg data;
+    struct chat_pdu data;
 
-    data.type = _CHAT_INFO_MESSAGE;
+    data.type = CHAT_INFO;
     strcpy(data.username, args->username);
     strcpy(data.content, "/enter");
     send(sfd, &data, sizeof(data), 0);
 
-    data.type = _CHAT_MESSAGE;
+    data.type = CHAT_MESSAGE;
     while (1) {
-        itty_gets(buff, _BUFF_TEXTSIZE);
+        tui_read(buff, TEXT_SIZE);
         strcpy(data.content, buff);
 
         if (strcmp(buff, "/leave") == 0)
@@ -49,7 +58,7 @@ void *handle_input(void *arg)
         printf("\e[A\e[2K\e[8C");
     }
 
-    data.type = _CHAT_INFO_MESSAGE;
+    data.type = CHAT_INFO;
     send(sfd, &data, sizeof(data), 0);
 
     printf("\e[A\e[2K");
@@ -61,12 +70,12 @@ void *handle_input(void *arg)
 
 void *handle_output(void *arg)
 {
-    struct thd_client_args *args = arg;
+    struct args *args = arg;
     int *pflg = args->flags_pointer, sfd = args->socket_fd;
     char *buff = args->buffer, special_buff[256];
-    struct chatpkg data;
+    struct chat_pdu data;
 
-    recv(sfd, special_buff, sizeof(_WELCOME_MESS), 0);
+    recv(sfd, special_buff, sizeof(WELCOME_MESSAGE), 0);
     printf("%s", special_buff);
 
     printf("\e[8C");
@@ -79,7 +88,7 @@ void *handle_output(void *arg)
 
         printf("\e[s\e[2K\e[A\e[2K\r");
 
-        if (data.type == _CHAT_MESSAGE) {
+        if (data.type == CHAT_MESSAGE) {
             printf("║ %s: %s\n", data.username, data.content);
         } else {
             if (data.content[1] == 'e')
@@ -88,14 +97,14 @@ void *handle_output(void *arg)
                 printf("║ \t\033[3m%s disconnected...\033[0m\n", data.username);
         }
 
-        printf(_BAR);
+        printf(BAR);
         printf("║ type: %s\e[u\e[B", buff);
         fflush(stdout);
     }
 
     printf("\e[2K\e[A");
 
-    recv(sfd, special_buff, sizeof(_LEAVE_MESS), 0);
+    recv(sfd, special_buff, sizeof(LEAVE_MESSAGE), 0);
     printf("%s", special_buff);
 
     return NULL;
@@ -104,16 +113,16 @@ void *handle_output(void *arg)
 int main(int argc, char *argv[])
 {
     int sfd, flags = 0;
-    char tty_buffer[_BUFF_TEXTSIZE] = {0};
+    char tty_buffer[TEXT_SIZE] = {0};
     pthread_t incli, outcli;
     in_port_t serv_port;
     struct sockaddr_in myaddr;
-    struct thd_client_args args;
+    struct args args;
 
-    if (parse_cli_arg(argc, argv))
+    if (parse_args(argc, argv))
         return 0;
 
-    if (strlen(argv[1]) >= _BUFF_USERNAMESIZE) {
+    if (strlen(argv[1]) >= USERNAME_SIZE) {
         fprintf(stderr, "Incorrect username (31 char max)...\n");
         return 0;
     }

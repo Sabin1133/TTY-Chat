@@ -1,17 +1,22 @@
+#include <unistd.h>
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <termios.h>
 
-#include "serverside.h"
+#include "chat_protocol.h"
+
+#include "server/fd_group.h"
 
 #define CHAT_CLOSE 2
 #define WORK_TIME 500
 
+
 struct thd_serv_args {
     int *flag_pointer;
-    struct fdgroup *fdg;
+    struct fd_group *fdg;
     FILE *activity_log;
     FILE *messages_log;
 };
@@ -53,7 +58,7 @@ void *handle_chat(void *arg)
 {
     struct thd_serv_args *args = arg;
     int *pflg = args->flag_pointer;
-    struct fdgroup *fdg = args->fdg;
+    struct fd_group *fdg = args->fdg;
     FILE *log = args->activity_log, *msglog = args->messages_log;
 
     fprintf(log, "Starting service...\n");
@@ -63,7 +68,7 @@ void *handle_chat(void *arg)
         if (*pflg & CHAT_CLOSE)
             break;
 
-        fdgroup_work(fdg, WORK_TIME, log, msglog);
+        fdgrp_run(fdg, log, msglog);
     }
 
     fprintf(log, "Closing service...\n");
@@ -77,7 +82,7 @@ int main(int argc, char *argv[])
     int flags = 0;
     in_port_t selected_port;
     pthread_t cli, work;
-    struct fdgroup fdgr;
+    struct fd_group fdgr;
     struct thd_serv_args args;
     FILE *act_log, *mess_log;
 
@@ -99,7 +104,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (fdgroup_setup(&fdgr, selected_port, act_log)) {
+    if (fdgrp_setup(&fdgr, act_log, INADDR_ANY, selected_port)) {
         fclose(mess_log);
         fclose(act_log);
         printf("Closing server...\n");
@@ -117,7 +122,7 @@ int main(int argc, char *argv[])
     pthread_join(cli, NULL);
     pthread_join(work, NULL);
 
-    fdgroup_cleanup(&fdgr, act_log);
+    fdgrp_cleanup(&fdgr, act_log);
     fclose(mess_log);
     fclose(act_log);
 
