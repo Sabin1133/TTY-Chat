@@ -1,14 +1,12 @@
 #ifndef FD_GROUP_H
 #define FD_GROUP_H
 
-#include <sys/epoll.h>
-
-#include "utils/logging_syscall.h"
-
-#include "fd_array.h"
-
 #define SOCKETS_LIMIT 32
 #define LISTEN_LIMIT 8
+
+#include <stdio.h>
+
+#include <netinet/in.h>
 
 
 struct fd_group {
@@ -18,7 +16,8 @@ struct fd_group {
     /* socket listening for incoming connections */
     int listening_socket;
 
-    /* sockets of client connections */
+    /* sockets of clients' connections */
+    int sockets_n;
     int clients_sockets[SOCKETS_LIMIT];
 };
 

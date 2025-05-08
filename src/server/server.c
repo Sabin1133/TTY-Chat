@@ -14,19 +14,18 @@
 #define WORK_TIME 500
 
 
-struct thd_serv_args {
+struct args {
     int *flag_pointer;
     struct fd_group *fdg;
     FILE *activity_log;
     FILE *messages_log;
 };
 
-int parse_cli_arg(int argc, char *argv[])
+int parse_args(int argc, char *argv[])
 {
     if ((argc != 2) || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
-        printf("Usage:\n\t./chatserver \033[1m[port]\033[0m\n\n");
-        printf("port - the port the server will be running on\n");
-        return 1;
+        printf("Usage:\n\t./server \033[1m[port]\033[0m\n\n");
+        return -1;
     }
 
     return 0;
@@ -56,7 +55,7 @@ void *handle_input(void *arg)
 
 void *handle_chat(void *arg)
 {
-    struct thd_serv_args *args = arg;
+    struct args *args = arg;
     int *pflg = args->flag_pointer;
     struct fd_group *fdg = args->fdg;
     FILE *log = args->activity_log, *msglog = args->messages_log;
@@ -83,10 +82,10 @@ int main(int argc, char *argv[])
     in_port_t selected_port;
     pthread_t cli, work;
     struct fd_group fdgr;
-    struct thd_serv_args args;
+    struct args args;
     FILE *act_log, *mess_log;
 
-    if (parse_cli_arg(argc, argv))
+    if (parse_args(argc, argv))
         return 0;
 
     printf("Starting server...\n");

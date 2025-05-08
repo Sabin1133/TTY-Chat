@@ -1,10 +1,15 @@
 #include <unistd.h>
+#include <sys/epoll.h>
 
 #include <string.h>
 
+#include "server/fd_group.h"
+
+#include "utils/logging_syscall.h"
+
 #include "chat_protocol.h"
 
-#include "server/fd_group.h"
+#include "fd_array.h"
 
 #define WELCOME_MESSAGE "╔══════════════════════════════════\n║\tWelcome to the chat!\n╠══════════════════════════════════\n\n"
 #define LEAVE_MESSAGE "╠══════════════════════════════════\n║\t\tBye!\n╚══════════════════════════════════\n"
@@ -15,14 +20,14 @@ static void _fdgrp_add_fd(struct fd_group *fdg, int fd)
 {
     struct epoll_event ev = {.events = EPOLLIN, .data.fd = fd};
 
+    fdarr_ctl(fdg->clients_sockets, fdg->sockets_n, FDARR_ADD, fd);
     epoll_ctl(fdg->epoll_fd, EPOLL_CTL_ADD, fd, &ev);
-    fdarr_ctl(fdg->clients_sockets, FDARR_ADD, fd);
 }
 
 static void _fdgrp_rmv_fd(struct fd_group *fdg, int fd)
 {
-    fdarr_ctl(fdg->clients_sockets, FDARR_RMV, fd);
     epoll_ctl(fdg->epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+    fdarr_ctl(fdg->clients_sockets, fdg->sockets_n, FDARR_RMV, fd);
 }
 
 int fdgrp_setup(struct fd_group *fdg, FILE *log, in_addr_t inet_address, in_port_t inet_port)
@@ -33,7 +38,6 @@ int fdgrp_setup(struct fd_group *fdg, FILE *log, in_addr_t inet_address, in_port
     struct epoll_event ev;
 
     addr.sin_family = AF_INET;
-    // addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_addr.s_addr = htonl(inet_address);
     addr.sin_port = htons(inet_port);
 
@@ -64,7 +68,8 @@ int fdgrp_setup(struct fd_group *fdg, FILE *log, in_addr_t inet_address, in_port
 
     fdg->epoll_fd = epoll_fd;
     fdg->listening_socket = lis_socket;
-    fdarr_ctl(fdg->clients_sockets, FDARR_SETUP, SOCKETS_LIMIT);
+    fdg->sockets_n = 0;
+    fdarr_ctl(fdg->clients_sockets, SOCKETS_LIMIT, FDARR_SETUP);
 
     return 0;
 }

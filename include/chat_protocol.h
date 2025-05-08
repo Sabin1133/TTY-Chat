@@ -4,7 +4,7 @@
 #define USERNAME_SIZE 20
 #define TEXT_SIZE 44
 
-/* Normal Message */
+/* Normal Chat Message */
 #define CHAT_MESSAGE 0
 
 /* Chat Information */

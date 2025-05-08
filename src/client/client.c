@@ -25,9 +25,8 @@ struct args {
 int parse_args(int argc, char *argv[])
 {
     if ((argc != 4) || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
-        printf("Usage:\n");
-        printf("\t./client \033[1m[username] [ip address] [port]\033[0m\n\n");
-        return 1;
+        printf("Usage:\n\t./client \033[1m[username] [ip address] [port]\033[0m\n\n");
+        return -1;
     }
 
     return 0;
@@ -159,4 +158,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
