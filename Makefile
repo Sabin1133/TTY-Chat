@@ -17,7 +17,7 @@ CLIENTTARGET := $(CLIENTSOURCE:$(SRCDIR)/%.c=$(BUILDDIR)/%)
 SOURCES := $(filter-out $(SERVERSOURCE) $(CLIENTSOURCE), $(shell find $(SRCDIR) -name '*.c'))
 OBJECTS := $(patsubst $(SRCDIR)/%.c, $(BUILDDIR)/%.o, $(SOURCES))
 
-LIBSOURCES := $(shell find lib -name '*.c')
+LIBSOURCES := $(shell find $(LIBDIR) -name '*.c')
 LIBOBJECTS := $(patsubst $(LIBDIR)/%.c, $(BUILDDIR)/%.o, $(LIBSOURCES))
 
 
@@ -29,11 +29,11 @@ client: $(CLIENTTARGET)
 
 $(SERVERTARGET): $(SERVEROBJECT) $(OBJECTS) $(LIBOBJECTS)
 	mkdir -p $(dir $@)
-	$(CXX) -o $@ $^
+	$(CC) -o $@ $^
 
 $(CLIENTTARGET): $(CLIENTOBJECT) $(OBJECTS) $(LIBOBJECTS)
 	mkdir -p $(dir $@)
-	$(CXX) -o $@ $^
+	$(CC) -o $@ $^
 
 $(LIBOBJECTS): $(BUILDDIR)/%.o: $(LIBDIR)/%.c
 	mkdir -p $(dir $@)
