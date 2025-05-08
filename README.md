@@ -20,75 +20,74 @@ Copyright (c) 2022 Sabin Padurariu
 
 ## General Overview
 
-A server-client chat architecture written entirely in C using only POSIX
-libraries and with minimal need of dynamic memory. The chat was designed to be 
-easy to use, maintain and very portable hence the use of a TUI.
+A lightweight chat architecture written in C using POSIX libraries.
+Designed to be easy to use, very portable and easy to maintain.
+
+## Future Updates
+
+* download and upload files to the server
+* client commands
+    * see people connected
+    * create chat rooms
+    * see uploaded media
+* server commands
+    * see people connected and ip address
+    * see chat rooms
+    * see uploaded files
+    * see server up time
+    * ban/kick clients
 
 ## Functionality
 
-## Important remarks and notes beforehand:
+### Server
 
-In order for people outside of local network to connect to the server a port 
-forward must be set up on the default gateway of the LAN with the port that the
-server will be running on.
+The server creates two log files in the directory it resides, one containing
+general information about the server's activity and one containing all messages
+that are sent across the connections.
 
+The messages are encrypted using a simple xor key for a light security measure.
 
-## Functionality
-
-### Server-side
-
-The server will create two log files in the directory it resides, one with
-general information about the server's activity and one with all the messages 
-that are sent across the server.
-
-The messages are encrypted using a simple xor key just for a light security
-measure.
-
-To start the server just run the executable from the terminal like so:
-```bash
-./server 8192
-```
-
-As of now the server supports only one command "closetower" that closes the 
-servers and all the other connections.
+Currently the server supports only one command, `closetower`, that closes the 
+server and all connections.
 
 For more information or help use the "--help" flag.
 
-### CLient-side
+### Client
 
-The client has a box for printing incoming messages and a input box both
-implemented in the terminal.
+The client has a terminal user interface where messages are displayed and an
+input prompt for writing messages.
 
-To start the client and connect to the server just run the executable from the 
-terminal like so:
-```bash
-./client james 81.123.210.3 8192
-```
-The required arguments are the name, the ip address and the port the server is
-running on
-
-As of now the client supports only normal messages and one command "/leave" 
+Currently, the client supports only normal messages and one command "/leave" 
 that is used to leave the chat and close the connection.
 
 For more information or help use the "--help" flag.
 
-## **Other remarks and programming details**
+## Usage
 
-* The implementation is linux kernel style and the code format is done 
-accordingly hence every variable is declared at the start of every function
-* Minimal use of dynamic memory allocation
+To start the server just run the executable:
+```bash
+user@hostname:~$ server 8192
+```
 
-## **Future Updates**
+To start the client and connect to the server just run the executable:
+```bash
+user@hostname:~$ client james 81.123.210.3 8192
+```
 
-* Download and upload files to the server (via FTP protocol)
-* more commands for the client
-    * ability to see people connected
-    * ability to create chat rooms
-    * ability to see uploaded files and download them
-* more commands for the server
-    * ability to see people connected and their ip address
-    * ability to see chat rooms
-    * ability to see uploaded files
-    * ability to see server up time
-    * ability to ban/kick clients
-* Windows Client coming soon
+## Implementation
+
+The asynchronous execution is what lies at the core of the implementation. The
+server listens for client connections and fowards traffic in an asynchronous
+manner which makes it fast and cheap in terms of resources.
+
+### File descriptor Group
+
+The `fd_group` data structure is the working horse of the system.
+It manages connections by leveraging the multiplexing mechanism provided by
+the `epoll` kernel data struture in order to achieve fast response times.
+
+By using multiplexing the server is able to listen to multiple connections at
+the same time and respond to each one of them.
+
+It stores the `sockets` of the connections in static int array and broadcasts
+every message received from the clients.
